@@ -35,6 +35,8 @@ def reducer(operation):
     else:
         coef = 1
 
+    if coef == 0:
+        return 0, 0
     # get last digit as power if exist
     # power is equal to 0 if char "X" exist and 0 if not
     if reg[3]:
@@ -72,7 +74,8 @@ def reduce_expression(equation_tab):
             minimized_dict[power] = coef
 
     for power, coef in sorted(minimized_dict.items()):
-        operation_array.append(Operation(coef, power))
+        if coef != 0:
+            operation_array.append(Operation(coef, power))
 
     # return sorted array of Operation objects
     return sorted(operation_array, key=lambda x: x.power)
@@ -80,14 +83,21 @@ def reduce_expression(equation_tab):
 
 def print_reduced_equation(operation_array):
     print("Reduced form: ", end="")
+
+    if len(operation_array) == 0:
+        print("0", end=" ")
     for index, operation in enumerate(operation_array):
-        coef_str = str(operation.coef).replace("-", "")
+        coef_str = str(operation.coef)
         if index != 0:
             if operation.coef >= 0:
                 print("+ ", end="")
             else:
+                coef_str = coef_str.replace("-", "")
                 print("- ", end="")
-        print(f"{coef_str} * X^{operation.power}", end=" ")
+        if operation.coef == 0:
+            print("0", end=" ")
+        else:
+            print(f"{coef_str} * X^{operation.power}", end=" ")
     print("= 0")
 
 
@@ -125,6 +135,27 @@ def resolve_second_degre(operation_array):
         print("Discriminant is strictly negative, there is no solution:")
 
 
+def resolve_first_degre(operation_array):
+    a = 0
+    b = 0
+
+    for operation in operation_array:
+        if operation.power == 0:
+            b = operation.coef
+        elif operation.power == 1:
+            a = operation.coef
+
+    if b == 0:
+        print("The solution is:\n0")
+        exit(0)
+    if a == 0:
+        print("The solution is:\n0")
+        exit(0)
+    else:
+        soluce = -b / a
+        print(f"The solution is:\n{soluce}")
+
+
 def compute(eq_str=None):
     if eq_str is not None:
 
@@ -133,7 +164,11 @@ def compute(eq_str=None):
         if expression_tab[0] and expression_tab[1]:
             operation_array = reduce_expression(expression_tab)
             print_reduced_equation(operation_array)
-            equation_degre = operation_array[-1].power
+
+            if len(operation_array) > 0:
+                equation_degre = operation_array[-1].power
+            else:
+                equation_degre = 0
             print(f"Polynomial degree: {equation_degre:g}")
 
             if equation_degre > 2:
@@ -143,6 +178,17 @@ def compute(eq_str=None):
 
             if equation_degre == 2:
                 resolve_second_degre(operation_array)
+
+            if equation_degre == 1:
+                resolve_first_degre(operation_array)
+
+            if equation_degre == 0:
+                if operation_array:
+                    print("There is no solution")
+                    exit(0)
+                else:
+                    print("All the ℝ is a solution")
+                    exit(0)
 
         else:
             print("Input invalid")
