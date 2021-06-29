@@ -19,14 +19,14 @@ def parse_expression(equation):
 
 
 def reducer(operation):
-    reg = re.search("([\+|-]?\d*\.?\d*)(\*)?(X|x)?(\^\d+)?", operation)
+    reg = re.search("([\+|-]?\d*\.?\d*)(\*)?(X|x)?(\^\d+\.?\d*)?", operation)
     if reg:
         reg = reg.groups()
     else:
         print("Input invalid")
         exit(0)
 
-    # get first digit as power if exist
+    # get first digit as coef if exist
     if reg[0]:
         try:
             coef = float(reg[0])
@@ -40,11 +40,15 @@ def reducer(operation):
     # get last digit as power if exist
     # power is equal to 0 if char "X" exist and 0 if not
     if reg[3]:
-        try:
-            power = reg[3].replace("^", "")
-            power = float(power)
-        except:
-            power = 0
+        power = reg[3].replace("^", "")
+        if power.isdigit():
+            try:
+                power = float(power)
+            except:
+                power = 0
+        else:
+            print(f"Input error (power can't be a float number): {operation}")
+            exit(0)
     elif reg[2] and reg[2].upper() == "X":
         power = 1
     else:
@@ -71,7 +75,7 @@ def reduce_expression(equation_tab):
         if power in minimized_dict:
             minimized_dict[power] -= coef
         else:
-            minimized_dict[power] = coef
+            minimized_dict[power] = -coef
 
     for power, coef in sorted(minimized_dict.items()):
         if coef != 0:
@@ -98,7 +102,7 @@ def print_reduced_equation(operation_array):
             print("0", end=" ")
         else:
             print(f"{coef_str} * X^{operation.power}", end=" ")
-    print("= 0")
+    print("= 0\n")
 
 
 def resolve_second_degre(operation_array):
@@ -114,10 +118,10 @@ def resolve_second_degre(operation_array):
         elif operation.power == 2:
             a = operation.coef
 
-    print(f"a = {a}\nb = {b}\nc = {c}\n")
+    print(f"a = {a}\nb = {b}\nc = {c}")
 
     discr = (b ** 2) - 4 * a * c
-    print(f"Delta is equal to {discr}")
+    print(f"Delta is equal to {discr}\n")
 
     if discr > 0:
         soluce_1 = (-b - (discr ** (1 / 2))) / (2 * a)
@@ -129,10 +133,12 @@ def resolve_second_degre(operation_array):
 
     if discr == 0:
         soluce = -b / (2 * a)
-        print(f"Discriminant is equal to zero the solution is:\n{soluce}")
+        print(f"Discriminant is equal to zero, the solution is:\n{soluce}")
 
     if discr < 0:
-        print("Discriminant is strictly negative, there is no solution:")
+        print(
+            f"Discriminant is strictly negative, the solutions are:\n({-b} + i√{discr}) / {2 * a}\n({-b} - i√{discr}) / {2 * a}"
+        )
 
 
 def resolve_first_degre(operation_array):
