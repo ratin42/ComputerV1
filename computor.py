@@ -8,18 +8,44 @@ def parse_expression(equation):
         equation.replace(" ", "")
         .replace("\t", "")
         .replace("\n", "")
-        .replace("+", " +")
-        .replace("-", " -")
+        # .replace("+", " +")
+        # .replace("-", " -")
         .replace("=", " = ")
     )
+
+    equation = re.sub("(?<![\+|-])([\+|-])", r" \1", equation)
+
     equation = equation.split(" = ")
     for i in range(len(equation)):
         equation[i] = equation[i].strip()
     return equation
 
 
+# check if string contains at least one number
+def hasNumbers(inputString):
+    return any(char.isdigit() for char in inputString)
+
+
+# cast string to float handle special operator
+def cast_to_float(string, curr_operation):
+    if not string or not hasNumbers(string):
+        print(f"parsing Error => {curr_operation}")
+        exit(0)
+
+    if string[0].isnumeric() or string[1].isnumeric():
+        return float(string)
+    elif string[:2] == "+-":
+        return float(string[1:])
+    elif string[:2] == "--":
+        return float(string[2:])
+
+
 def reducer(operation):
-    reg = re.search("([\+|-]?\d*\.?\d*)(\*)?(X|x)?(\^\d+\.?\d*)?", operation)
+    if re.search("\^", operation) and not re.search("\^\d", operation):
+        print(f"parsing Error => {operation}")
+        exit(0)
+
+    reg = re.search("(\+?-?\d*\.?\d*)(\*)?(X|x)?(\^\d+\.?\d*)?", operation)
     if reg:
         reg = reg.groups()
     else:
@@ -29,8 +55,10 @@ def reducer(operation):
     # get first digit as coef if exist
     if reg[0]:
         try:
-            coef = float(reg[0])
-        except:
+            coef = cast_to_float(reg[0], operation)
+        except SystemExit:
+            exit(0)
+        except Exception:
             coef = 1
     else:
         coef = 1
@@ -211,7 +239,12 @@ if __name__ == "__main__":
 
         elif arg_len == 1:
             print(f"No '=' in the expression: '{eq_str}'")
-            exit(0)
+            answer = input("Would you like to add '= 0' [Y/N] ")
+            if answer.upper() == "Y":
+                eq_str += "=0"
+                compute(eq_str)
+            else:
+                exit(0)
 
         else:
             print(f"Multiple '=' found in the expression: '{eq_str}'")
